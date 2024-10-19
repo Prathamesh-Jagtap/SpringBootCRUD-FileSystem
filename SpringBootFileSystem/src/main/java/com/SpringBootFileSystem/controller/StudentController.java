@@ -1,77 +1,63 @@
 package com.SpringBootFileSystem.controller;
-import com.SpringBootFileSystem.entity.Student;
-import com.SpringBootFileSystem.service.StudentService;
-import jakarta.validation.Valid;
+import com.SpringBootFileSystem.service.FileStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.IOException;
-import java.util.List;
 
 @RestController
-@RequestMapping("/v1/students")
-@Validated
-public class StudentController {
+@RequestMapping("/v1/files")
+public class StudentController{
 
     @Autowired
-    private StudentService studentService;
+    private FileStorageService fileStorageService;
 
-    @GetMapping
-    public List<Student> getAllStudents() {
-        return studentService.getAllStudents();
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Student> getStudentById(@PathVariable Long id) {
-        return studentService.getStudentById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
-    }
-
-    @PostMapping
-    public ResponseEntity<Student> createStudent(@Valid @RequestBody Student student) {
-        return new ResponseEntity<>(studentService.saveStudent(student), HttpStatus.CREATED);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Student> updateStudent(@PathVariable Long id, @Valid @RequestBody Student student) {
-        return studentService.updateStudent(id, student)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
-        studentService.deleteStudent(id);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-    }
-
-    @PostMapping("/{id}/upload")
-    public ResponseEntity<String> uploadProfilePicture(
-            @PathVariable Long id,
-            @RequestParam("file") MultipartFile file) {
+    @PostMapping("/upload")
+    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
-            Student student = studentService.getStudentById(id).orElseThrow(() -> new RuntimeException("Student not found"));
-            String filePath = studentService.storeFile(file.getBytes(), file.getOriginalFilename());
-            student.setProfilePicture(filePath);
-            studentService.saveStudent(student);
-            return new ResponseEntity<>("File uploaded successfully", HttpStatus.OK);
+            String response = fileStorageService.saveFile(file);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (IOException e) {
-            return new ResponseEntity<>("File upload failed", HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed");
         }
     }
 
-    @GetMapping("/{id}/download")
-    public ResponseEntity<byte[]> downloadProfilePicture(@PathVariable Long id) {
+    @GetMapping("/download/{fileName}")
+    public ResponseEntity<byte[]> downloadFile(@PathVariable String fileName) {
         try {
-            Student student = studentService.getStudentById(id).orElseThrow(() -> new RuntimeException("Student not found"));
-            byte[] fileData = studentService.getFile(student.getProfilePicture());
-            return new ResponseEntity<>(fileData, HttpStatus.OK);
+            byte[] fileData = fileStorageService.readFile(fileName);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            headers.setContentDispositionFormData("attachment", fileName);
+            return new ResponseEntity<>(fileData, headers, HttpStatus.OK);
         } catch (IOException e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
+
+
+    @PutMapping("/update/{fileName}")
+    public ResponseEntity<String> updateFile(@PathVariable String fileName, @RequestParam("file") MultipartFile newFile) {
+        try {
+            String response = fileStorageService.updateFile(fileName, newFile);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File update failed");
+        }
+    }
+
+    @DeleteMapping("/delete/{fileName}")
+    public ResponseEntity<String> deleteFile(@PathVariable String fileName) {
+        try {
+            String response = fileStorageService.deleteFile(fileName);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("File not found");
         }
     }
 }
