@@ -1,15 +1,16 @@
 # Spring Boot application to perform CRUD operations and file system
 
-# Overview
-
-This Spring Boot application allows you to manage student records and upload profile pictures using JPA and MySQL. The application provides RESTful APIs to perform CRUD operations on student data.
+1. Spring Boot application that provides a CRUD (Create, Read, Update, Delete) operations
+2. Spring Boot application that provides a CRUD operations API for managing files stored on the file system. The API allows you to upload, download, update, and delete files.
 
 # Features
-
-- Create, Read, Update, Delete (CRUD) operations for students
-- Upload and download profile pictures
+- CRUD operations on students data
 - Validation of student data
 - Exception handling for improved error management
+- Upload files: Save files to the local file system.
+- Download files: Retrieve files from the local file system.
+- Update files: Replace an existing file with a new one.
+- Delete files: Remove files from the local file system.
 
 # Technologies Used
 
