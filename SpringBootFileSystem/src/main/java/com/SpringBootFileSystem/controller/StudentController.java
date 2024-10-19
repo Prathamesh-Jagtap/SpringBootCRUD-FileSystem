@@ -15,12 +15,12 @@ import java.io.IOException;
 public class StudentController{
 
     @Autowired
-    private FileStorageService fileStorageService;
+    private StudentService studentService;
 
     @PostMapping("/upload")
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
-            String response = fileStorageService.saveFile(file);
+            String response = studentService.saveFile(file);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed");
@@ -30,7 +30,7 @@ public class StudentController{
     @GetMapping("/download/{fileName}")
     public ResponseEntity<byte[]> downloadFile(@PathVariable String fileName) {
         try {
-            byte[] fileData = fileStorageService.readFile(fileName);
+            byte[] fileData = studentService.readFile(fileName);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
             headers.setContentDispositionFormData("attachment", fileName);
@@ -44,7 +44,7 @@ public class StudentController{
     @PutMapping("/update/{fileName}")
     public ResponseEntity<String> updateFile(@PathVariable String fileName, @RequestParam("file") MultipartFile newFile) {
         try {
-            String response = fileStorageService.updateFile(fileName, newFile);
+            String response = studentService.updateFile(fileName, newFile);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File update failed");
@@ -54,7 +54,7 @@ public class StudentController{
     @DeleteMapping("/delete/{fileName}")
     public ResponseEntity<String> deleteFile(@PathVariable String fileName) {
         try {
-            String response = fileStorageService.deleteFile(fileName);
+            String response = studentService.deleteFile(fileName);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("File not found");
