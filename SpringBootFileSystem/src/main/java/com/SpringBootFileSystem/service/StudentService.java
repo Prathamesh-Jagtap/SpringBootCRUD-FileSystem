@@ -13,7 +13,6 @@ public class StudentService {
     private final String storageDirectory = "file_storage";
 
     public StudentService() {
-        // Create storage directory if it doesn't exist
         File directory = new File(storageDirectory);
         if (!directory.exists()) {
             directory.mkdir();
