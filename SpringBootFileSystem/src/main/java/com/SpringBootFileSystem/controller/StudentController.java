@@ -1,5 +1,5 @@
 package com.SpringBootFileSystem.controller;
-import com.SpringBootFileSystem.service.FileStorageService;
+import com.SpringBootFileSystem.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
