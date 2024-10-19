@@ -1,63 +1,54 @@
 package com.SpringBootFileSystem.service;
-
-import com.SpringBootFileSystem.entity.Student;
-import com.SpringBootFileSystem.repository.StudentRepository;
-import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Optional;
 
 @Service
-@Transactional
 public class StudentService {
+    private final String storageDirectory = "file_storage";
 
-    private static final String UPLOAD_DIR = "uploads/";
-
-    @Autowired
-    private StudentRepository studentRepository;
-
-    public List<Student> getAllStudents() {
-        return studentRepository.findAll();
+    public StudentService() {
+        // Create storage directory if it doesn't exist
+        File directory = new File(storageDirectory);
+        if (!directory.exists()) {
+            directory.mkdir();
+        }
     }
 
-    public Optional<Student> getStudentById(Long id) {
-        return studentRepository.findById(id);
+    public String saveFile(MultipartFile file) throws IOException {
+        Path filePath = Paths.get(storageDirectory, file.getOriginalFilename());
+        Files.write(filePath, file.getBytes());
+        return "File uploaded successfully: " + file.getOriginalFilename();
     }
 
-    public Student saveStudent(Student student) {
-        return studentRepository.save(student);
-    }
-
-    public void deleteStudent(Long id) {
-        studentRepository.deleteById(id);
-    }
-
-    public Optional<Student> updateStudent(Long id, Student newStudent) {
-        return studentRepository.findById(id).map(student -> {
-            student.setName(newStudent.getName());
-            student.setEmail(newStudent.getEmail());
-            student.setCourse(newStudent.getCourse());
-            student.setProfilePicture(newStudent.getProfilePicture());
-            return studentRepository.save(student);
-        });
-    }
-
-    public String storeFile(byte[] fileBytes, String originalFilename) throws IOException {
-        String directory = UPLOAD_DIR;
-        String filePath = directory + originalFilename;
-        Files.createDirectories(Paths.get(directory));
-        Files.write(Paths.get(filePath), fileBytes);
-        return filePath;
-    }
-
-    public byte[] getFile(String fileName) throws IOException {
-        Path filePath = Paths.get(UPLOAD_DIR + fileName);
+    public byte[] readFile(String fileName) throws IOException {
+        Path filePath = Paths.get(storageDirectory, fileName);
         return Files.readAllBytes(filePath);
     }
+
+    public String updateFile(String fileName, MultipartFile newFile) throws IOException {
+        Path filePath = Paths.get(storageDirectory, fileName);
+        if (Files.exists(filePath)) {
+            Files.write(filePath, newFile.getBytes());
+            return "File updated successfully: " + fileName;
+        } else {
+            return "File not found: " + fileName;
+        }
+    }
+
+    public String deleteFile(String fileName) throws IOException {
+        Path filePath = Paths.get(storageDirectory, fileName);
+        if (Files.exists(filePath)) {
+            Files.delete(filePath);
+            return "File deleted successfully: " + fileName;
+        } else {
+            return "File not found: " + fileName;
+        }
+    }
 }
+
